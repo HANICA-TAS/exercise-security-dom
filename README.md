@@ -121,12 +121,13 @@ If ESLint is all set up run:``` npm run lint-all ```.
 The current code does not fully conform to Google's standards, for now we'll fix this by changing a few rules. Open the file .eslintrc.js and add change the rules section to:
 
 ```javascript
-'rules': {
+  'rules': {
     "require-jsdoc": "off",
     "no-unused-vars": "off",
     "max-len": ["error", { "code": 120 }],
     "indent": ["error", 4],
-    "new-cap": "off"
+    "new-cap": "off",
+    "no-eval": "error"
   },
 ```
 
@@ -158,10 +159,38 @@ Decorators are like Annotations in the Java language like to know from the OOPD-
 
 Run ```npm start``` to run the application. We're ready to investigate some security weaknesses!
 
-7. Cross Site Scripting
+7. When you don't use a framework and want to use TypeScript to modify HTML and listen to events we need to use the DOM: Document Object Model. The DOM provides methods to read and modify the document (an object referring to the current HTML document) like finding elements and adding elements. Open the documentation about the [Document](https://developer.mozilla.org/en-US/docs/Web/API/Document) class and the [Element](https://developer.mozilla.org/en-US/docs/Web/API/Element) class in your browser. Use this documentation to:
 
-8. Cross Origin Resource Sharing
+    * Create a new file called innerhtmlmodifier.ts
+    * Create a new class called InnerHTMLModifier that implements the IHTMLModifier interface
+    * Add a line before the class declaration to decorate it: ``` @HTMLModifier.register ```
+    * Implement the function _modify_  to find the element with id "index" and change the innerHTML property to the value "Changed!"
+    * Add the script-reference to the HTML file
+    
+    Sometimes the browser does not refresh when a new file is added, in that case use Ctrl^C to end the current run and run ``` npm run start``` again. 
 
-9. Content Security Policy
+    When your code works the page show the test "Changed!" just below the document title. In the next steps you will use the DOM to do other modifications, all having certain risks. 
+    
+8. Suppose you're working at StackOverflow, a site that enables developers to help each other with code issues. The current HTML has a small input box that might be used to enter code. 
 
-7. Deploy on Firebase
+    Add a new class OutputModifier in a file outputmodifier.ts with the same decorator like in the previous step. Implement the _modify_ function to find the button with id "evalEcho" and listen to the click event. When the button is clicked look up the element with id "output" and change the innerHTML property with the value from the input box  (which has the id "echo"). 
+    
+    This simulates the behaviour of adding a question about a certain code issue, save it to any database and reloads the screen with the question showing the question and the code. 
+    
+    Try typing some text into the edit box and click on the button, your text should be displayed just above the big square. 
+     
+    JavaScript has a function called _eval_ that can be used to execute a text (string) as JavaScript code. Modify your OutputModifier to change the innerHTML property to the execution of the eval function that takes the value from the inbox box as a parameter. 
+    
+    Try typing something like ``` alert("hi!") ``` in the box and click the button. Instead of displaying the text it gets executed as code. Some people like this dynamic feature but you can never trust the user's input and you should also be careful with carelessly displaying data from other external sources.
+    
+    Take-aways:
+    * Eval is evil, do not use this feature. The linter will warn you for this, see for yourself: ``` npm run lint-all ```
+    * Never trust use input and be careful displaying data from other external sources. You might ending up executing code that can harm your application or your user, this is called Cross Site Scripting (XSS). 
+    
+    Visit the [OWASP Top 10](https://owasp.org/www-project-top-ten/) site and read the section about XSS. 
+
+9. Cross Origin Resource Sharing
+
+10. Content Security Policy
+
+11. Deploy on Firebase
